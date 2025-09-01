@@ -1,4 +1,4 @@
-package go_fcm_receiver
+package main
 
 import (
 	"encoding/base64"
@@ -10,11 +10,6 @@ func (f *FCMClient) Register() (string, string, uint64, uint64, error) {
 
 	if f.AppId == "" || f.ProjectID == "" || f.ApiKey == "" {
 		err := errors.New("FCMClient must receive an AppId, ProjectID, and ApiKey. read more at https://github.com/morhaviv/go-fcm-receiver/blob/main/README.md#api-deprecation")
-		return "", f.GcmToken, f.AndroidId, f.SecurityToken, err
-	}
-
-	err := f.registerFCM()
-	if err != nil {
 		return "", f.GcmToken, f.AndroidId, f.SecurityToken, err
 	}
 
@@ -30,11 +25,20 @@ func (f *FCMClient) Register() (string, string, uint64, uint64, error) {
 		return "", f.GcmToken, f.AndroidId, f.SecurityToken, err
 	}
 
-	if f.GcmToken == "" || f.FcmToken == "" {
+	if f.GcmToken == "" {
 		err := f.registerRequestGCM()
 		if err != nil {
 			return "", "", 0, 0, err
 		}
+	}
+
+	err := f.registerFCM()
+	if err != nil {
+		return "", f.GcmToken, f.AndroidId, f.SecurityToken, err
+	}
+	if f.FcmToken == "" {
+		err := errors.New("failed to obtain FCM token")
+		return "", f.GcmToken, f.AndroidId, f.SecurityToken, err
 	}
 
 	return f.FcmToken, f.GcmToken, f.AndroidId, f.SecurityToken, nil
